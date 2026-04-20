@@ -69,6 +69,7 @@ local function CreateRow(parent)
   local row = CreateFrame("Button", nil, parent)
   row:SetHeight(ROW_HEIGHT)
   row:SetHighlightTexture("Interface/QuestFrame/UI-QuestTitleHighlight")
+  row:RegisterForClicks("AnyUp")
 
   row.icon = row:CreateTexture(nil, "ARTWORK")
   row.icon:SetSize(16,16)
@@ -93,6 +94,12 @@ local function CreateRow(parent)
     end
   end)
   row:SetScript("OnLeave", function() GameTooltip:Hide() end)
+  row:SetScript("OnClick", function(self)
+    if not self.itemId or not IsAltKeyDown() then return end
+    if type(OpenLootDb) == "function" then
+      OpenLootDb(self.itemId)
+    end
+  end)
 
   return row
 end
@@ -291,6 +298,10 @@ function RBV.UI.Toggle()
   else
     f:Show()
     RBV.UI.ApplySettings()
+    if RBV.UI.searchBox then
+      RBV.UI.searchBox:SetFocus()
+      RBV.UI.searchBox:HighlightText()
+    end
   end
 end
 
@@ -409,6 +420,12 @@ function RBV.UI.Create()
   emptyText:Hide()
 
   f.elapsed = 0
+  f:SetScript("OnShow", function()
+    if RBV.UI and RBV.UI.searchBox then
+      RBV.UI.searchBox:SetFocus()
+      RBV.UI.searchBox:HighlightText()
+    end
+  end)
   f:SetScript("OnUpdate", function(self, elapsed)
     self.elapsed = self.elapsed + elapsed
     local interval = (RBVDB and RBVDB.updateInterval) or 2.0
