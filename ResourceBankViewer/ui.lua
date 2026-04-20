@@ -276,7 +276,7 @@ local function UpdateRows(resetScroll)
     end
   end
 
-  ui.emptyText:SetShown(total == 0)
+  if total == 0 then ui.emptyText:Show() else ui.emptyText:Hide() end
 end
 
 function RBV.UI.Update(resetScroll) UpdateRows(resetScroll) end
