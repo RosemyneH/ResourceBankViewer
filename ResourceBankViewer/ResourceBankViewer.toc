@@ -1,0 +1,11 @@
+## Interface: 30300
+## Title: ResourceBankViewer
+## Notes: Movable resource bank viewer for Synastria RBankFrame
+## Author: Stefano + M365 Copilot, Qt
+## Version: 0.43.8
+## SavedVariables: RBVDB
+
+core.lua
+preset_itemids.lua
+rbank_datasource.lua
+ui.lua
