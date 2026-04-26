@@ -29,6 +29,7 @@
 - 🔄 **Background refresh**: Can briefly nudge `RBankFrame` off-screen so bank data stays fresh without opening the UI
 - 🧹 **Scrape helper**: Compare `RBankFrame` line widgets to your preset / extra IDs; optionally append missing IDs to saved extras
 - 🎨 **ElvUI font**: If ElvUI is present, the panel prefers its normal font; `/rbv font` adjusts size
+- Adds Function to withdraw and Deposit
 
 ---
 
