@@ -39,7 +39,7 @@ end
 
 local function GetElvUIFont()
   local E = _G.ElvUI
-  if type(E) == "table" and type(E.media) == "table" and E.media.normFont then
+  if E and E.media and E.media.normFont then
     return E.media.normFont
   end
   return nil
@@ -65,11 +65,19 @@ local function CreateButton(parent, text)
   return b
 end
 
+local STRIPE_A = { 0.12, 0.12, 0.15, 0.55 }
+local STRIPE_B = { 0.07, 0.07, 0.09, 0.45 }
+
 local function CreateRow(parent)
   local row = CreateFrame("Button", nil, parent)
   row:SetHeight(ROW_HEIGHT)
   row:SetHighlightTexture("Interface/QuestFrame/UI-QuestTitleHighlight")
   row:RegisterForClicks("AnyUp")
+
+  row.bg = row:CreateTexture(nil, "BACKGROUND")
+  row.bg:SetAllPoints()
+  row.bg:SetTexture("Interface\\Buttons\\WHITE8X8")
+  row.bg:SetVertexColor(STRIPE_A[1], STRIPE_A[2], STRIPE_A[3], STRIPE_A[4])
 
   row.icon = row:CreateTexture(nil, "ARTWORK")
   row.icon:SetSize(16,16)
@@ -90,15 +98,30 @@ local function CreateRow(parent)
     if self.itemId then
       GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
       GameTooltip:SetHyperlink("item:"..self.itemId)
+      GameTooltip:AddLine(" ")
+      GameTooltip:AddLine("Left-click: deposit one stack", 0.7, 0.9, 1.0)
+      GameTooltip:AddLine("Right-click: withdraw one stack", 0.7, 0.9, 1.0)
+      if OpenLootDb then
+        GameTooltip:AddLine("Alt-left-click: loot database", 0.6, 0.6, 0.6)
+      end
       GameTooltip:Show()
     end
   end)
   row:SetScript("OnLeave", function() GameTooltip:Hide() end)
-  row:SetScript("OnClick", function(self)
-    if not self.itemId or not IsAltKeyDown() then return end
-    if type(OpenLootDb) == "function" then
-      OpenLootDb(self.itemId)
+  row:SetScript("OnClick", function(self, button)
+    if not self.itemId then return end
+    if IsAltKeyDown() and button == "LeftButton" then
+      if OpenLootDb then OpenLootDb(self.itemId) end
+      return
     end
+    if button == "RightButton" then
+      if RBV.NotifyWithdraw then RBV.NotifyWithdraw(self.itemId) end
+    elseif button == "LeftButton" then
+      if RBV.NotifyDeposit then RBV.NotifyDeposit(self.itemId) end
+    else
+      return
+    end
+    if RBV.UI and RBV.UI.Update then RBV.UI.Update(false) end
   end)
 
   return row
@@ -232,11 +255,11 @@ local function UpdateRows(resetScroll)
 
   local entries = RBV.GetSortedEntries()
 
-  local watchedN = (RBV.GetWatchedItemIds and #RBV.GetWatchedItemIds()) or 0
-  if watchedN == 0 then
-    ui.emptyText:SetText("No item ids — edit preset_itemids.lua or /rbv scrape add (extraIds)")
+  local bankN = GetCustomGameDataCount(13) or 0
+  if bankN == 0 then
+    ui.emptyText:SetText("Resource bank is empty (no entries in custom game data 13).")
   else
-    ui.emptyText:SetText("No matches")
+    ui.emptyText:SetText("No matches for search.")
   end
 
   local scroll = ui.scroll
@@ -276,6 +299,11 @@ local function UpdateRows(resetScroll)
       end
       local tex = GetItemIcon(e.id)
       row.icon:SetTexture(tex or "Interface/Icons/INV_Misc_QuestionMark")
+      local stripe = row.bg
+      if stripe then
+        local t = (idx % 2 == 1) and STRIPE_A or STRIPE_B
+        stripe:SetVertexColor(t[1], t[2], t[3], t[4])
+      end
       row:Show()
     else
       row.itemId = nil
@@ -384,6 +412,14 @@ function RBV.UI.Create()
   reset:SetPoint("TOPRIGHT", f, "TOPRIGHT", -28, -6)
   reset:SetScript("OnClick", function() if RBV.ResetBaseline then RBV.ResetBaseline(true) end end)
 
+  local depositAll = CreateButton(f, "Deposit All")
+  depositAll:SetWidth(92)
+  depositAll:SetPoint("TOPRIGHT", reset, "TOPLEFT", -8, 0)
+  depositAll:SetScript("OnClick", function()
+    if RBV.NotifyDepositAll then RBV.NotifyDepositAll() end
+    if RBV.UI and RBV.UI.Update then RBV.UI.Update(false) end
+  end)
+
   local close = CreateFrame("Button", nil, f, "UIPanelCloseButton")
   close:SetPoint("TOPRIGHT", f, "TOPRIGHT", -2, -2)
 
@@ -449,6 +485,7 @@ function RBV.UI.Create()
   RBV.UI.searchLabel = searchLabel
   RBV.UI.searchBox = searchBox
   RBV.UI.clearBtn = clearBtn
+  RBV.UI.depositAllBtn = depositAll
 
   ApplyLayout()
   f:Hide()

@@ -70,10 +70,7 @@ SlashCmdList["RBV"] = function(msg)
   elseif cmd == "scrape" then
     if RBV.DoScrapeCommand then RBV.DoScrapeCommand(arg) end
   elseif cmd == "ids" then
-    local presetN = #(RBV.PRESET_ITEM_IDS or {})
-    local extraN = #(RBVDB.extraIds or {})
-    local total = (RBV.GetWatchedItemIds and #RBV.GetWatchedItemIds()) or 0
-    Print(("%d preset + %d saved extra = %d watched."):format(presetN, extraN, total))
+    Print(("Bank (custom game data 13): %d unique item slot(s)."):format(GetCustomGameDataCount(13) or 0))
   else
     if RBV.UI and RBV.UI.Toggle then RBV.UI.Toggle() end
   end

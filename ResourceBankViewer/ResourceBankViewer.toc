@@ -6,6 +6,5 @@
 ## SavedVariables: RBVDB
 
 core.lua
-preset_itemids.lua
 rbank_datasource.lua
 ui.lua
